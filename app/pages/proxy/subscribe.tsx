@@ -61,13 +61,18 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       //- 邮箱不存在：创建客户并订阅
       await createCustomer(authResult.admin, { email, tags })
       log.info({ email, created: true }, 'Customer created and subscribed')
-      return withCors(jsonOk<{ success: boolean }>({ success: true }))
+      return withCors(jsonOk<{ success: boolean; prevState: string }>({ success: true, prevState: 'NOT_SUBSCRIBED' }))
     }
 
     //- 邮箱存在：更新客户 Tags 并同步订阅状态
     await updateCustomer(authResult.admin, existing, { tags })
     log.info({ email, created: false }, 'Customer updated and subscription synced')
-    return withCors(jsonOk<{ success: boolean }>({ success: true }))
+    return withCors(
+      jsonOk<{ success: boolean; prevState: string }>({
+        success: true,
+        prevState: existing.defaultEmailAddress?.marketingState ?? 'NOT_SUBSCRIBED'
+      })
+    )
   } catch (error) {
     log.error({ err: error }, 'Subscribe action failed')
     const code = error instanceof BusinessError ? error.code : 400
@@ -84,7 +89,7 @@ const CUSTOMER_BY_EMAIL_QUERY = `#graphql
         node {
           id
           tags
-          defaultEmailAddress { emailAddress marketingState marketingOptInLevel }
+          defaultEmailAddress { emailAddress marketingState marketingOptInLevel marketingState }
         }
       }
     }
@@ -97,7 +102,7 @@ const CUSTOMER_CREATE_MUTATION = `#graphql
       customer {
         id
         tags
-        defaultEmailAddress { emailAddress marketingState marketingOptInLevel }
+        defaultEmailAddress { emailAddress marketingState marketingOptInLevel  }
       }
       userErrors { field message }
     }
