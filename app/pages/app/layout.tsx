@@ -48,6 +48,7 @@ export default function App() {
         <a href="/app/alt-text">AI 替代文本</a>
         <a href="/app/competitor">竞品监控</a>
         <a href="/app/analytics">数据分析</a>
+        <a href="/app/machine-subscribe">整机订购省</a>
         {/* <a href="/app/activities">会员活动管理</a> */}
       </NavMenu>
       <Outlet />
