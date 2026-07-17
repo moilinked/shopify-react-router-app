@@ -62,6 +62,6 @@ export default defineConfig({
     dedupe: ['react', 'react-dom']
   },
   optimizeDeps: {
-    include: ['@shopify/app-bridge-react']
+    include: ['@shopify/app-bridge-react', 'recharts']
   }
 }) satisfies UserConfig

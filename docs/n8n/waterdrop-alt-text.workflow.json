@@ -1,0 +1,192 @@
+{
+  "name": "Waterdrop Alt Text Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "waterdrop-alt-text",
+        "responseMode": "onReceived",
+        "responseCode": 200,
+        "options": {
+          "rawBody": false
+        }
+      },
+      "id": "node-webhook",
+      "name": "Webhook (App → n8n)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-1200, 0],
+      "webhookId": "waterdrop-alt-text"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "a1", "name": "jobId", "value": "={{ $json.body.jobId }}", "type": "string" },
+            { "id": "a2", "name": "shop", "value": "={{ $json.body.shop }}", "type": "string" },
+            { "id": "a3", "name": "callbackUrl", "value": "={{ $json.body.callbackUrl }}", "type": "string" },
+            { "id": "a4", "name": "language", "value": "={{ $json.body.language }}", "type": "string" },
+            { "id": "a5", "name": "promptOverride", "value": "={{ $json.body.promptOverride }}", "type": "string" },
+            {
+              "id": "a6",
+              "name": "includeProductTitle",
+              "value": "={{ $json.body.includeProductTitle }}",
+              "type": "boolean"
+            },
+            { "id": "a7", "name": "brand", "value": "={{ $json.body.brand }}", "type": "string" },
+            { "id": "a8", "name": "keywords", "value": "={{ $json.body.keywords }}", "type": "string" },
+            { "id": "a9", "name": "items", "value": "={{ $json.body.items }}", "type": "array" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-extract-payload",
+      "name": "Extract Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-980, 0]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "items",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "id": "node-split-items",
+      "name": "Split Items (per image)",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [-760, 0]
+    },
+    {
+      "parameters": {
+        "batchSize": 5,
+        "options": {}
+      },
+      "id": "node-batch-loop",
+      "name": "Concurrency Limit (5)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [-540, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{ "name": "Content-Type", "value": "application/json" }]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: 'gpt-5.5',\n  max_completion_tokens: 300,\n  temperature: 0.4,\n  response_format: { type: 'json_object' },\n  messages: [\n    {\n      role: 'system',\n      content: ($('Extract Payload').first().json.promptOverride && $('Extract Payload').first().json.promptOverride.trim()) || `You are an expert ecommerce SEO and accessibility copywriter for Shopify websites.\\nYour task is to generate accurate, natural, and SEO-friendly alt text for website images based only on the image content and page context.\\nThe images may include product photos, lifestyle scenes, usage scenarios, installation images, detail images, comparison images, banners, blog images, icons, or decorative visuals.\\nFollow these rules strictly:\\n1. Describe what is actually visible in the image.\\n2. Make the alt text helpful for users who cannot see the image.\\n3. Write in natural language, not as a list of keywords.\\n4. Keep the alt text concise, ideally 80–125 characters.\\n5. Do not exceed 125 characters unless necessary to clearly describe important visual information.\\n6. Do not use keyword stuffing.\\n7. Do not invent product features, certifications, benefits, or performance claims.\\n8. Do not mention claims such as “removes 99%,” “NSF certified,” “best,” “healthy,” “safe,” “eco-friendly,” or “top-rated” unless the claim is clearly visible in the image.\\n9. Do not start with “Image of,” “Photo of,” “Picture of,” or similar phrases.\\n10. If a product is clearly visible, include the product type, visible feature, usage scenario, or location.\\n11. If the image mainly shows a lifestyle or usage scene, describe the scene naturally without forcing a product name.\\n12. If the image is a banner or hero image, describe the main visual subject and setting.\\n13. If the image is an infographic, describe the main message or visible information in a concise way.\\n14. If the image is purely decorative and does not add meaningful information, return an empty alt text.\\n15. If the image contains readable text that is important to understanding the image, include the key message.\\n16. If the image is ambiguous, describe it cautiously and only mention what can be visually confirmed.\\n17. The alt text MUST be written in the language specified by the user prompt’s “Output language” field.\\n18. Echo back the input itemId verbatim in the \"itemId\" field of your JSON output. Never invent, modify, omit, or rename it.\\n19. Output only valid JSON in the schema specified by the user prompt. Do not include explanations outside the JSON.`\n    },\n    {\n      role: 'user',\n      content: [\n        {\n          type: 'text',\n          text: `Input data:\\nitemId: ${$('Concurrency Limit (5)').item?.json?.itemId || ''}\\nOutput language: ${$('Extract Payload').first().json.language || 'en'}\\nProduct title, if available: ${($('Extract Payload').first().json.includeProductTitle && $('Concurrency Limit (5)').item?.json?.context?.productTitle) ? $('Concurrency Limit (5)').item.json.context.productTitle : 'N/A'}\\nBrand, if available: ${$('Extract Payload').first().json.brand || 'N/A'}\\nKeywords: ${$('Extract Payload').first().json.keywords || 'N/A'}\\nImage URL: ${$('Concurrency Limit (5)').item?.json?.imageUrl || ''}\\n\\nTask:\\nGenerate one accurate alt text for the image based only on the visible image content and the input data above. Follow the rules in the system prompt strictly.\\n\\nJSON output schema (output exactly this shape, nothing else):\\n{\\n  \"itemId\": \"<copy the input itemId above verbatim>\",\\n  \"altText\": \"<your generated alt text, or empty string if the image is purely decorative>\"\\n}`\n        },\n        {\n          type: 'image_url',\n          image_url: { url: $('Concurrency Limit (5)').item?.json?.imageUrl, detail: 'low' }\n        }\n      ]\n    }\n  ]\n}) }}",
+        "options": {
+          "timeout": 60000,
+          "response": {
+            "response": {
+              "fullResponse": false,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "node-openai-vision",
+      "name": "OpenAI Vision (gpt-5.5)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-320, 0],
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
+      "notesInFlow": true,
+      "notes": "调用 OpenAI Chat Completions（vision）。强制 JSON 输出 {\"altText\":\"...\"}。图片 URL 直传 Shopify CDN，detail:low 省 token。"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// runOnceForAllItems 模式：一次拿到当前 batch 的全部 OpenAI 响应 + 源 dispatch items，按 index 配对。\n// 不依赖 pairedItem 元数据（HTTP Request 节点不一定写入 pairedItem，runOnceForEachItem 下\n// $('Concurrency Limit (5)').item 可能为 null → 整条被丢弃，导致 Format Result 没有 output）。\n//\n// 数据流（v1.4 重构后）：\n// - itemId 来源（权威）：sources[i].json.itemId — source by index，绝对不会错位\n// - itemId 校验（可观测）：parsed.itemId — 让模型从 user prompt 把 itemId 原样回写，\n//   不一致时打 warning 但仍以 source 为准，便于在 OpenAI 端按 itemId 排障\n// - error 分支：模型响应不存在，只能用 source[i].itemId 兜底\n\nconst responses = $input.all();\nconst sources = $('Concurrency Limit (5)').all();\nconst executionId = $execution.id;\nconst out = [];\n\nfor (let i = 0; i < responses.length; i++) {\n  const source = sources[i]?.json ?? {};\n  const resp = responses[i]?.json ?? {};\n  const itemId = source.itemId;\n\n  // itemId 缺失：跳过这条（不应发生；防御性）\n  if (!itemId) continue;\n\n  // OpenAI 错误响应：{ error: { message, type, ... } }\n  if (resp.error) {\n    out.push({\n      json: {\n        itemId,\n        status: 'error',\n        errorMessage: String(resp.error.message || resp.error.type || 'OpenAI error').slice(0, 500),\n        executionId\n      }\n    });\n    continue;\n  }\n\n  // 正常响应：choices[0].message.content 是 JSON 字符串 {\"itemId\":\"...\",\"altText\":\"...\"}\n  const raw = resp?.choices?.[0]?.message?.content;\n  let parsed = null;\n  if (typeof raw === 'string') {\n    try {\n      parsed = JSON.parse(raw);\n    } catch (e) {\n      // 极端情况：模型违反 response_format=json_object → 把原文当 alt（双保险）\n      parsed = { altText: raw };\n    }\n  }\n\n  // 双校验：模型必须把输入的 itemId 原样回写（system prompt rule 18）。\n  // 校验仅供可观测性使用；即使模型漏写/错写，itemId 仍以 source by index 为准。\n  const echoed = parsed?.itemId != null ? String(parsed.itemId).trim() : '';\n  if (echoed && echoed !== itemId) {\n    console.warn(`[Format Result] itemId mismatch at index ${i}: source=${itemId} echoed=${echoed}`);\n  }\n\n  const alt = (typeof parsed?.altText === 'string' ? parsed.altText : '').trim();\n\n  // 空 altText：根据 system prompt 规则 14，可能是模型判定为装饰图。\n  // App 端目前不接受空 alt，所以这里映射成 error 让用户在 review 页看到原因。\n  if (!alt) {\n    out.push({\n      json: {\n        itemId,\n        status: 'error',\n        errorMessage: 'Decorative image or empty altText returned by model',\n        executionId\n      }\n    });\n    continue;\n  }\n\n  out.push({\n    json: {\n      itemId,\n      status: 'ok',\n      altText: alt.length > 125 ? alt.slice(0, 125) : alt,\n      executionId\n    }\n  });\n}\n\nreturn out;"
+      },
+      "id": "node-format-result",
+      "name": "Format Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-100, 0]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "results",
+        "options": {}
+      },
+      "id": "node-aggregate-results",
+      "name": "Aggregate Results",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [340, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Extract Payload').first().json.callbackUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{ "name": "Content-Type", "value": "application/json" }]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jobId\": {{ JSON.stringify($('Extract Payload').first().json.jobId) }},\n  \"results\": {{ JSON.stringify($json.results) }}\n}",
+        "options": {
+          "timeout": 30000,
+          "redirect": { "redirect": { "followRedirects": false } }
+        }
+      },
+      "id": "node-callback",
+      "name": "Callback to App",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [560, 0],
+      "notesInFlow": true,
+      "notes": "POST 回 App /webhooks/n8n/alt-text，body: { jobId, results: [{itemId, status, altText|errorMessage, executionId}] }"
+    }
+  ],
+  "connections": {
+    "Webhook (App → n8n)": {
+      "main": [[{ "node": "Extract Payload", "type": "main", "index": 0 }]]
+    },
+    "Extract Payload": {
+      "main": [[{ "node": "Split Items (per image)", "type": "main", "index": 0 }]]
+    },
+    "Split Items (per image)": {
+      "main": [[{ "node": "Concurrency Limit (5)", "type": "main", "index": 0 }]]
+    },
+    "Concurrency Limit (5)": {
+      "main": [
+        [{ "node": "Aggregate Results", "type": "main", "index": 0 }],
+        [{ "node": "OpenAI Vision (gpt-5.5)", "type": "main", "index": 0 }]
+      ]
+    },
+    "OpenAI Vision (gpt-5.5)": {
+      "main": [[{ "node": "Format Result", "type": "main", "index": 0 }]]
+    },
+    "Format Result": {
+      "main": [[{ "node": "Concurrency Limit (5)", "type": "main", "index": 0 }]]
+    },
+    "Aggregate Results": {
+      "main": [[{ "node": "Callback to App", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": [{ "name": "waterdrop" }, { "name": "shopify" }, { "name": "alt-text" }],
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

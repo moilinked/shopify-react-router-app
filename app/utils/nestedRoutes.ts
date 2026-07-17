@@ -13,7 +13,7 @@ function isRouteFile(name: string): boolean {
   if (name.startsWith('.')) return false
   const ext = path.extname(name)
   if (!ROUTE_EXTENSIONS.has(ext)) return false
-  if (IGNORED_PATTERNS.some((pattern) => pattern.test(name))) return false
+  if (IGNORED_PATTERNS.some((p) => p.test(name))) return false
   return true
 }
 
@@ -35,10 +35,13 @@ function dirToSegment(dirname: string): string {
 
 function buildRoutes(absDir: string, filePrefix: string): RouteConfigEntry[] {
   const entries = fs.readdirSync(absDir, { withFileTypes: true })
-  const files = entries.filter((entry) => entry.isFile() && isRouteFile(entry.name))
-  const dirs = entries.filter((entry) => entry.isDirectory() && !entry.name.startsWith('.'))
-  const indexFile = files.find((file) => baseName(file.name) === 'index')
-  const routeFiles = files.filter((file) => !['layout', 'index'].includes(baseName(file.name)))
+
+  const files = entries.filter((e) => e.isFile() && isRouteFile(e.name))
+  const dirs = entries.filter((e) => e.isDirectory() && !e.name.startsWith('.'))
+
+  const indexFile = files.find((f) => baseName(f.name) === 'index')
+  const routeFiles = files.filter((f) => !['layout', 'index'].includes(baseName(f.name)))
+
   const result: RouteConfigEntry[] = []
 
   if (indexFile) {
@@ -58,7 +61,7 @@ function buildRoutes(absDir: string, filePrefix: string): RouteConfigEntry[] {
 
     const subEntries = fs.readdirSync(subAbsDir, { withFileTypes: true })
     const layoutEntry = subEntries.find(
-      (entry) => entry.isFile() && baseName(entry.name) === 'layout' && ROUTE_EXTENSIONS.has(path.extname(entry.name))
+      (e) => e.isFile() && baseName(e.name) === 'layout' && ROUTE_EXTENSIONS.has(path.extname(e.name))
     )
     const layoutPath = layoutEntry ? `${subFilePrefix}/${layoutEntry.name}` : undefined
     const isPathless = dir.name.startsWith('_')

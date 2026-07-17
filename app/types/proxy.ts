@@ -128,3 +128,8 @@ export interface EmailConsentResult {
     userErrors: CustomerUserError[]
   }
 }
+
+export interface CustomerSmsResult {
+  success: boolean
+  prevState: string
+}

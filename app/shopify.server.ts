@@ -2,6 +2,10 @@ import '@shopify/shopify-app-react-router/adapters/node'
 import { ApiVersion, AppDistribution, shopifyApp } from '@shopify/shopify-app-react-router/server'
 import { PrismaSessionStorage } from '@shopify/shopify-app-session-storage-prisma'
 import prisma from './db.server'
+import { startAltTextTimeoutSweeper } from './services/altText.timeout.server'
+
+// 在服务端入口启动一次性的 Job 超时清理任务（幂等，多副本部署需替换为外部 cron）
+startAltTextTimeoutSweeper()
 
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
@@ -12,9 +16,6 @@ const shopify = shopifyApp({
   authPathPrefix: '/auth',
   sessionStorage: new PrismaSessionStorage(prisma),
   distribution: AppDistribution.AppStore,
-  future: {
-    expiringOfflineAccessTokens: true
-  },
   ...(process.env.SHOP_CUSTOM_DOMAIN ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] } : {})
 })
 

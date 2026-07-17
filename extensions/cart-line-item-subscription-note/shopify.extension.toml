@@ -1,0 +1,21 @@
+# Learn more about configuring your Customer account UI extension:
+# https://shopify.dev/api/customer-account-ui-extensions/unstable/configuration
+
+api_version = "2026-04"
+
+[[extensions]]
+name = "cart-line-item-subscription-note"
+handle = "cart-line-item-subscription-note"
+
+uid = "b76dc5ae-e137-0152-2616-b04c42da5a57ce5f09ad"
+
+type = "ui_extension"
+
+[[extensions.targeting]]
+module = "./src/CartLineItemSubscriptionNote.tsx"
+target = "customer-account.order-status.cart-line-item.render-after"
+
+[extensions.capabilities]
+# Gives the extension access to query Shopify's storefront API for the
+# variant price when the Order Status cart line payload does not include it.
+api_access = true

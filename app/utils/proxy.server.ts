@@ -11,6 +11,7 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router'
 import { authenticate } from '~/shopify.server'
 import { HttpError, TimeoutError } from '~/utils/http'
 import type { ApiResponse } from '~/utils/http'
+import { EXTERNAL_API_DISABLED } from '~/config/externalApi'
 import logger from '~/lib/logger.server'
 import type {
   ExternalApiConfig,
@@ -48,6 +49,12 @@ export function createExternalApiClient(config: ExternalApiConfig) {
   /** 发起 HTTP 请求并返回 JSON 响应 */
   async function call(params: ExternalApiParams) {
     const targetUrl = buildUrl(baseUrl, params)
+
+    // 外部接口调用总开关：关闭时短路外部请求，返回空对象
+    if (EXTERNAL_API_DISABLED) {
+      logger.warn({ module: 'external-api-disabled', name, url: targetUrl.toString() }, 'Skip external API call')
+      return {}
+    }
 
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), timeout)
@@ -218,6 +225,9 @@ export function createProxyAction(config: ProxyRouteConfig) {
       return new Response(null, { status: 204, headers: CORS_HEADERS })
     }
     const path = new URL(request.url).pathname
+    let method: HttpMethod | undefined
+    let endpoint: string | undefined
+    let extraHeaders: Record<string, string> | undefined
     try {
       await authenticateProxy(request)
 
@@ -225,6 +235,8 @@ export function createProxyAction(config: ProxyRouteConfig) {
 
       const input = (await request.json()) as ProxyRequestBody
       const params = normalizeBody(input, config)
+      method = params.method
+      endpoint = params.endpoint
       const log = logger.child({
         module: 'proxy-action',
         routeName: config.routeName,
@@ -235,7 +247,7 @@ export function createProxyAction(config: ProxyRouteConfig) {
       log.info('Proxy action started')
 
       const shop = url.searchParams.get('shop') ?? undefined
-      const extraHeaders = config.forwardProxyParams ? { 'X-Shopify-Proxy': url.searchParams.toString() } : undefined
+      extraHeaders = config.forwardProxyParams ? { 'X-Shopify-Proxy': url.searchParams.toString() } : undefined
 
       const data = await config.client.call({ ...params, extraHeaders, context: { shop } })
       log.info('Proxy action completed')
@@ -246,7 +258,10 @@ export function createProxyAction(config: ProxyRouteConfig) {
         {
           module: 'proxy-action',
           routeName: config.routeName,
+          method,
+          endpoint,
           path,
+          extraHeaders,
           err: error,
           code: apiError.code
         },

@@ -1,0 +1,4 @@
+{
+  "subscription_title": "Abonnement: ",
+  "subscription_note": "{{sku}} Zahlung und Lieferung beginnen nach {{interval}}, {{price}} / {{intervalUnit}}"
+}

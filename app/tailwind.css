@@ -1,1 +1,41 @@
+@import '@wangeditor/editor/dist/css/style.css';
 @import 'tailwindcss';
+
+.rich-text-editor-field {
+  overflow: hidden;
+  border: 1px solid #8a8a8a;
+  border-radius: 8px;
+}
+
+.rich-text-editor-field--error {
+  border-color: #d72c0d;
+}
+
+.rich-text-editor-field--disabled {
+  border-color: #c9cccf;
+  background: #f1f2f3;
+  color: #8c9196;
+  cursor: not-allowed;
+}
+
+.rich-text-editor-field .w-e-toolbar {
+  border-bottom: 1px solid #d4d4d4;
+}
+
+.rich-text-editor-field .w-e-text-container {
+  min-height: 160px;
+}
+
+.rich-text-editor-field--disabled .w-e-toolbar,
+.rich-text-editor-field--disabled .w-e-text-container {
+  background: #f1f2f3;
+}
+
+.rich-text-editor-field--disabled .w-e-bar-item,
+.rich-text-editor-field--disabled .w-e-text-container {
+  opacity: 0.6;
+}
+
+.w-e-text-container [data-slate-editor] p {
+  margin: 2px 0;
+}

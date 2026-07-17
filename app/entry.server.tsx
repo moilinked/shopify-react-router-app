@@ -5,6 +5,11 @@ import { createReadableStreamFromReadable } from '@react-router/node'
 import { type EntryContext } from 'react-router'
 import { isbot } from 'isbot'
 import { addDocumentResponseHeaders } from './shopify.server'
+import logger from '~/lib/logger.server'
+
+logger.info({ test: true }, 'Logger is working')
+
+console.log('Logger is working in entry.server.tsx')
 
 export const streamTimeout = 5000
 
@@ -38,7 +43,7 @@ export default async function handleRequest(
       },
       onError(error) {
         responseStatusCode = 500
-        console.error(error)
+        logger.error({ err: error }, 'SSR render error')
       }
     })
 

@@ -14,21 +14,93 @@ datasource db {
 }
 
 model Session {
-  id            String    @id
-  shop          String
-  state         String
-  isOnline      Boolean   @default(false)
-  scope         String?
-  expires       DateTime?
-  accessToken   String
-  userId        BigInt?
-  firstName     String?
-  lastName      String?
-  email         String?
-  accountOwner  Boolean   @default(false)
-  locale        String?
-  collaborator  Boolean?  @default(false)
-  emailVerified Boolean?  @default(false)
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
   refreshToken        String?
   refreshTokenExpires DateTime?
+}
+
+// ========== AI 替代文本（Alt Text） ==========
+// 详细设计见 docs/AI替代文本功能技术方案.md
+//
+// 注：SQLite 不支持 enum，所有 enum 字段使用 String 存储；
+// 取值约束在应用层（services/altText.server.ts）维护。
+
+model AltTextJob {
+  id                  String        @id @default(cuid())
+  shop                String
+  type                String // SCAN | GENERATE | APPLY
+  status              String        @default("PENDING") // PENDING | RUNNING | REVIEWING | SUCCEEDED | PARTIAL | FAILED | CANCELLED
+  source              String // products | collections | all-products | files-all | files-missing-alt | files-ai-optimized
+  filter              String? // JSON 字符串：选中的商品 ID / 系列 ID / Files 筛选
+  language            String        @default("en")
+  prompt              String?
+  brand               String? // 用户在生成弹窗输入的品牌名（弹窗默认 Waterdrop，可改/可清）
+  keywords            String? // 用户在生成弹窗输入的本批 SEO 关键词（无系统默认，可清）
+  includeProductTitle Boolean       @default(true)
+  total               Int           @default(0)
+  processed           Int           @default(0)
+  failed              Int           @default(0)
+  createdBy           String?
+  errorMessage        String?
+  timeoutAt           DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  items               AltTextItem[]
+
+  @@index([shop, status])
+  @@index([shop, createdAt])
+}
+
+model AltTextItem {
+  id             String     @id @default(cuid())
+  jobId          String
+  job            AltTextJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  shop           String
+  resourceType   String // PRODUCT_IMAGE | FILE_MEDIA_IMAGE | FILE_GENERIC
+  resourceId     String // gid://shopify/MediaImage/xxx
+  parentId       String? // gid://shopify/Product/xxx（仅商品图）
+  parentTitle    String?
+  imageUrl       String
+  thumbnailUrl   String?
+  originalAlt    String?
+  generatedAlt   String?
+  editedAlt      String?
+  appliedAlt     String?
+  status         String     @default("PENDING") // PENDING | GENERATING | READY_FOR_REVIEW | EDITED | APPLIED | REJECTED | FAILED
+  errorMessage   String?
+  language       String?
+  n8nExecutionId String?
+  generatedAt    DateTime?
+  reviewedAt     DateTime?
+  appliedAt      DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@unique([shop, resourceId, jobId])
+  @@index([shop, status])
+  @@index([jobId, status])
+  @@index([shop, resourceId])
+}
+
+model AltTextSummary {
+  shop        String    @id
+  totalImages Int       @default(0)
+  missingAlt  Int       @default(0)
+  aiOptimized Int       @default(0)
+  lastScanAt  DateTime?
+  updatedAt   DateTime  @updatedAt
 }

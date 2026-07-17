@@ -7,6 +7,7 @@ export const APP_CONFIG = {
 
 export type AppConfig = typeof APP_CONFIG
 
+export const SMILE_API_BASE = 'https://api.smile.io/v1'
 /**
  * 多店铺 Smile API Token 映射
  * key = Shopify 店铺域名 (xxx.myshopify.com)

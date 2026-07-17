@@ -10,7 +10,8 @@ import type {
   CustomersByEmailData,
   CustomerCreateResult,
   CustomerUpdateResult,
-  EmailConsentResult
+  EmailConsentResult,
+  CustomerSmsResult
 } from '~/types/proxy'
 import logger from '~/lib/logger.server'
 
@@ -58,17 +59,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const existing = await getCustomerByEmail(authResult.admin, email)
 
     if (!existing) {
-      //- 邮箱不存在：创建客户并订阅
+      //- 邮箱不存在：创建客户并订阅，首次必定为未订阅状态
       await createCustomer(authResult.admin, { email, tags })
-      log.info({ email, created: true }, 'Customer created and subscribed')
-      return withCors(jsonOk<{ success: boolean; prevState: string }>({ success: true, prevState: 'NOT_SUBSCRIBED' }))
+      return withCors(jsonOk<CustomerSmsResult>({ success: true, prevState: 'NOT_SUBSCRIBED' }))
     }
 
     //- 邮箱存在：更新客户 Tags 并同步订阅状态
     await updateCustomer(authResult.admin, existing, { tags })
-    log.info({ email, created: false }, 'Customer updated and subscription synced')
     return withCors(
-      jsonOk<{ success: boolean; prevState: string }>({
+      jsonOk<CustomerSmsResult>({
         success: true,
         prevState: existing.defaultEmailAddress?.marketingState ?? 'NOT_SUBSCRIBED'
       })
@@ -102,7 +101,7 @@ const CUSTOMER_CREATE_MUTATION = `#graphql
       customer {
         id
         tags
-        defaultEmailAddress { emailAddress marketingState marketingOptInLevel  }
+        defaultEmailAddress { emailAddress marketingState marketingOptInLevel }
       }
       userErrors { field message }
     }

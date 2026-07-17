@@ -37,6 +37,7 @@
     "@shopify/app-bridge-react": "^4.2.4",
     "@shopify/shopify-app-react-router": "^1.1.0",
     "@shopify/shopify-app-session-storage-prisma": "^9.0.0",
+    "@wangeditor/editor": "^5.1.23",
     "isbot": "^5.1.31",
     "pino": "^10.3.1",
     "pino-pretty": "^13.1.3",
@@ -44,8 +45,15 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router": "^7.12.0",
+    "recharts": "^3.8.1",
     "tailwindcss": "^4.2.1",
-    "vite-tsconfig-paths": "^6.0.4"
+    "vite-tsconfig-paths": "^6.0.4",
+    "zustand": "^5.0.11"
+  },
+  "workspaces": {
+    "packages": [
+      "extensions/*"
+    ]
   },
   "devDependencies": {
     "@eslint/js": "^9.39.3",
@@ -75,6 +83,11 @@
   },
   "overrides": {
     "p-map": "^4.0.0"
+  },
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "es5-ext"
+    ]
   },
   "author": "ECOL0070"
 }

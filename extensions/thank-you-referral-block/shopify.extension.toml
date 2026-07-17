@@ -1,0 +1,64 @@
+# Learn more about configuring your checkout UI extension:
+# https://shopify.dev/docs/api/checkout-ui-extensions/latest/configuration
+
+# The version of APIs your extension will receive. Learn more:
+# https://shopify.dev/docs/api/usage/versioning
+api_version = "2026-04"
+
+[[extensions]]
+name = "Thank you referral"
+handle = "thank-you-referral-block"
+type = "ui_extension"
+uid = "e81bf38a-c2e8-4088-859c-5a73d393d1049dfca47c"
+
+# Controls where in Shopify your extension will be injected,
+# and the file that contains your extension’s source code. Learn more:
+# https://shopify.dev/docs/api/checkout-ui-extensions/latest/extension-targets-overview
+
+[[extensions.targeting]]
+module = "./src/Checkout.jsx"
+target = "purchase.thank-you.block.render"
+
+# Defines settings that will be collected from merchants installing
+# your extension. Learn more:
+# https://shopify.dev/docs/api/checkout-ui-extensions/latest/configuration#settings-definition
+
+[extensions.settings]
+
+[[extensions.settings.fields]]
+key = "image_url"
+type = "single_line_text_field"
+name = "Left image URL"
+description = "默认值：https://cdn.shopify.com/s/files/1/0078/6156/7570/files/referral-img.webp?v=1780976294"
+
+
+[[extensions.settings.fields]]
+key = "title1"
+type = "multi_line_text_field"
+name = "Title1"
+description = "默认值：Give friends 25% off."
+
+[[extensions.settings.fields]]
+key = "title2"
+type = "multi_line_text_field"
+name = "Title2"
+description = "默认值：Get $50 Gift Card when they buy."
+
+
+[[extensions.settings.fields]]
+key = "description"
+type = "multi_line_text_field"
+name = "Description"
+description = "默认值：Share your referral link and start earning rewards."
+
+[[extensions.settings.fields]]
+key = "button_label"
+type = "single_line_text_field"
+name = "Button label"
+description = "默认值：Get Your Link"
+
+[[extensions.settings.fields]]
+key = "button_url"
+type = "single_line_text_field"
+name = "Button link"
+description = "默认值：https://www.waterdropfilter.com/pages/refer-a-friend?ref=thankyoupage"

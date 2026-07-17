@@ -1,4 +1,5 @@
 import { APP_CONFIG } from '~/config'
+import { EXTERNAL_API_DISABLED } from '~/config/externalApi'
 
 // ── Types ──────────────────────────────────────────────
 
@@ -116,6 +117,12 @@ async function request<T>(method: string, config: HttpRequestConfig): Promise<T>
     url = APP_CONFIG.api.rewardsBackendAPI + url
   }
 
+  // 外部接口调用总开关：关闭时短路外部请求，返回安全空值（本 App 内部 localApi 不受影响）
+  if (EXTERNAL_API_DISABLED && !localApi) {
+    console.warn(`[external-api-disabled] skip ${method} ${url}`)
+    return null as T
+  }
+
   if (params) {
     const search = new URLSearchParams(params).toString()
     url += (url.includes('?') ? '&' : '?') + search
@@ -218,6 +225,12 @@ async function downloadFile(config: HttpRequestConfig): Promise<void> {
 
   if (!url.startsWith('http://') && !url.startsWith('https://')) {
     url = APP_CONFIG.api.rewardsBackendAPI + url
+  }
+
+  // 外部接口调用总开关：关闭时不发起下载请求
+  if (EXTERNAL_API_DISABLED) {
+    console.warn(`[external-api-disabled] skip download ${url}`)
+    return
   }
 
   if (params) {

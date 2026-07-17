@@ -1,0 +1,73 @@
+# Learn more about configuring your Customer account UI extension:
+# https://shopify.dev/api/customer-account-ui-extensions/unstable/configuration
+
+# The version of APIs your extension will receive. Learn more:
+# https://shopify.dev/docs/api/usage/versioning
+api_version = "2026-04"
+
+[[extensions]]
+name = "customer-account-page"
+handle = "customer-account-page"
+type = "ui_extension"
+uid = "71f4fcdb-6d50-da53-f904-369d93403b2cbb9fe70b"
+
+# Controls where in Shopify your extension will be injected,
+# and the file that contains your extension’s source code. Learn more:
+# https://shopify.dev/docs/api/customer-account-ui-extensions/unstable/extension-targets-overview
+
+[[extensions.targeting]]
+module = "./src/FullPageExtension.tsx"
+target = "customer-account.page.render"
+
+[extensions.capabilities]
+# Gives your extension access to directly query Shopify’s storefront API.
+# https://shopify.dev/docs/api/customer-account-ui-extensions/unstable/configuration#api-access
+api_access = true
+
+# Required to call our app backend (https://shopify.waterdropfilter.com) for
+# Smile loyalty data. The backend authenticates the customer account
+# session token via `authenticate.public.customerAccount`. Learn more:
+# https://shopify.dev/docs/api/customer-account-ui-extensions/unstable/configuration#network-access
+network_access = true
+
+[extensions.settings]
+
+[[extensions.settings.fields]]
+key = "reward_url"
+type = "single_line_text_field"
+name = "Reward页面链接"
+description = "默认值为：https://www.waterdropfilter.com/pages/rewards?ref=account"
+
+[[extensions.settings.fields]]
+key = "refer_url"
+type = "single_line_text_field"
+name = "Refer页面链接"
+description = "默认值为：https://www.waterdropfilter.com/pages/refer-a-friend?ref=account"
+
+
+[[extensions.settings.fields]]
+key = "contact_url"
+type = "single_line_text_field"
+name = "Contact us页面链接"
+description = "默认值为：https://www.waterdropfilter.com/pages/contact-us?ref=account"
+
+
+[[extensions.settings.fields]]
+key = "help_url"
+type = "single_line_text_field"
+name = "帮助页面链接"
+description = "默认值为：https://www.waterdropfilter.com/pages/help-center?ref=account"
+
+
+[[extensions.settings.fields]]
+key = "referral_help_pc"
+type = "single_line_text_field"
+name = "桌面端-裂变帮助图片"
+description = "默认值为：https://cdn.shopify.com/s/files/1/0078/6156/7570/files/referral-bg-pc.webp?v=1781772947"
+
+
+[[extensions.settings.fields]]
+key = "referral_help_mb"
+type = "single_line_text_field"
+name = "手机端-裂变帮助图片"
+description = "默认值为：https://cdn.shopify.com/s/files/1/0078/6156/7570/files/referral-bg-mb.webp?v=1781772816"

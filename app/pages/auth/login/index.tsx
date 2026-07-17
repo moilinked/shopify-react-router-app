@@ -1,7 +1,7 @@
+import { AppProvider } from '@shopify/shopify-app-react-router/react'
 import { useState } from 'react'
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router'
 import { Form, useActionData, useLoaderData } from 'react-router'
-import { AppProvider } from '@shopify/shopify-app-react-router/react'
 
 import { login } from '~/shopify.server'
 import { loginErrorMessage } from './error.server'
@@ -15,10 +15,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export const action = async ({ request }: ActionFunctionArgs) => {
   const errors = loginErrorMessage(await login(request))
 
-  return { errors }
+  return {
+    errors
+  }
 }
 
-export default function AuthLogin() {
+export default function Auth() {
   const loaderData = useLoaderData<typeof loader>()
   const actionData = useActionData<typeof action>()
   const [shop, setShop] = useState('')
@@ -34,7 +36,7 @@ export default function AuthLogin() {
               label="Shop domain"
               details="example.myshopify.com"
               value={shop}
-              onChange={(event) => setShop(event.currentTarget.value)}
+              onChange={(e) => setShop(e.currentTarget.value)}
               autocomplete="on"
               error={errors.shop}
             ></s-text-field>
