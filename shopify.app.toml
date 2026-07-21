@@ -10,7 +10,7 @@ automatically_update_urls_on_dev = true
 include_config_on_deploy = true
 
 [webhooks]
-api_version = "2026-07"
+api_version = "2026-04"
 
   [[webhooks.subscriptions]]
   topics = [ "app/uninstalled" ]
@@ -30,7 +30,7 @@ api_version = "2026-07"
 # read_reports: 渠道-Shopify营销报表(CHANNEL_MARKETING)走 shopifyqlQuery 取会话/销售/转化率。
 #   注:customerJourneySummary 渠道归因字段 + shopifyqlQuery 均需在 Partner Dashboard 申请
 #   「受保护客户数据(Protected Customer Data)Level 2」访问(Shopify 审核);审核未过前 CHANNEL_MARKETING 表为空(优雅降级)。
-scopes = "read_customers,write_customers,write_files,read_discounts,write_discounts,read_gift_cards,write_gift_cards,read_products,read_orders,read_reports,read_inventory,customer_read_customers"
+scopes = "read_publications,write_publications,write_products,read_customers,write_customers,write_files,read_discounts,write_discounts,read_gift_cards,write_gift_cards,read_products,read_orders,read_reports,read_inventory,customer_read_customers"
 
 [auth]
 redirect_urls = [ "https://example.com/api/auth" ]
