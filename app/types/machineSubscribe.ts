@@ -46,7 +46,6 @@ export interface SearchActionData {
   intent: 'search'
   products: SearchProduct[]
   notFoundIds: string[]
-  invalidIds: string[]
   queried: boolean
 }
 
@@ -64,7 +63,6 @@ export type ActionData = SearchActionData | CreateActionData
 export interface ActionRequestBody {
   intent?: 'search' | 'create'
   ids?: string[]
-  invalidIds?: string[]
   products?: VirtualProductCreateInput[]
   channelId?: string | null
 }

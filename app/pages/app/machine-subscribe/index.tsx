@@ -212,27 +212,10 @@ async function queryVirtualProducts(
   }
 }
 
-/** 从逗号分隔文本中解析出合法的产品数字 ID（去重），并收集非法输入 */
-function parseIds(raw: string): { valid: string[]; invalid: string[] } {
-  const valid: string[] = []
-  const invalid: string[] = []
-  for (const part of raw.split(',')) {
-    const trimmed = part.trim()
-    if (!trimmed) continue
-    if (/^\d+$/.test(trimmed)) valid.push(trimmed)
-    else invalid.push(trimmed)
-  }
-  return { valid: [...new Set(valid)], invalid }
-}
-
 /** 按 GID 列表查询产品（搜索 action 使用） */
-async function searchProductsByIds(
-  admin: AdminApiContext,
-  ids: string[],
-  invalidIds: string[]
-): Promise<SearchActionData> {
+async function searchProductsByIds(admin: AdminApiContext, ids: string[]): Promise<SearchActionData> {
   if (ids.length === 0) {
-    return { intent: 'search', products: [], notFoundIds: [], invalidIds, queried: true }
+    return { intent: 'search', products: [], notFoundIds: [], queried: true }
   }
 
   const { data } = await typedAdminGraphql<ProductListResponse>(admin, ProductListQuery, { ids })
@@ -241,7 +224,7 @@ async function searchProductsByIds(
   const foundIds = new Set(products.map((p) => p.id))
   const notFoundIds = ids.filter((id) => !foundIds.has(id)).map((id) => id.split('/').pop() ?? id)
 
-  return { intent: 'search', products, notFoundIds, invalidIds, queried: true }
+  return { intent: 'search', products, notFoundIds, queried: true }
 }
 
 /** 将已创建产品发布到销售渠道 */
@@ -305,7 +288,7 @@ export const action = async ({ request }: ActionFunctionArgs): Promise<ActionDat
     return { intent: 'create', ok: false, created: [], errors: ['请求体无效'] }
   }
 
-  if (body.intent === 'search') return searchProductsByIds(admin, body.ids ?? [], body.invalidIds ?? [])
+  if (body.intent === 'search') return searchProductsByIds(admin, body.ids ?? [])
 
   // 批量创建虚拟产品，并发布到 Online Store
   const products = body.products ?? []
@@ -362,14 +345,12 @@ export default function MachineSubscribeIndex() {
   const searchFetcher = useFetcher<SearchActionData>()
   // 批量创建虚拟产品：走 action
   const createFetcher = useFetcher<CreateActionData>()
-  const [value, setValue] = useState('')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   /** 已访问页的 after 游标栈（用于上一页）；空栈表示第 1 页 */
   const [cursorStack, setCursorStack] = useState<string[]>([])
   /** 创建失败错误，由 dismissible banner 展示，用户手动关闭后清空 */
   const [createErrors, setCreateErrors] = useState<string[] | null>(null)
   const [products, setProducts] = useState<SearchProduct[]>([])
-  const fieldRef = useRef<HTMLElement | null>(null)
   /** 防止 React effect 对同一份 fetcher 返回值重复执行关闭弹窗和刷新列表 */
   const lastCreateDataRef = useRef<CreateActionData | null>(null)
   /** 同步标记提交已开始，避免 React 状态尚未更新时用户立即关闭弹窗 */
@@ -411,23 +392,34 @@ export default function MachineSubscribeIndex() {
     loadVirtualPage()
   }, [loadVirtualPage])
 
-  const searchNodes = useCallback(() => {
-    const raw = value.trim()
-    if (!raw) {
-      shopify.toast.show('请输入产品 ID', { isError: true })
-      return
+  /** 打开官方产品选择器，选完后用 product.id（GID）发起查询 */
+  const pickAndSearchProducts = useCallback(async () => {
+    if (creating || loading) return
+
+    try {
+      if (!shopify.resourcePicker) {
+        shopify.toast.show('当前环境暂不支持产品选择器', { isError: true })
+        return
+      }
+
+      const picked = await shopify.resourcePicker({
+        type: 'product',
+        action: 'select',
+        multiple: true,
+        filter: { variants: false },
+        ...(products.length > 0 ? { selectionIds: products.map((product) => ({ id: product.id })) } : {})
+      })
+      if (!picked || picked.length === 0) return
+
+      const ids = [...new Set(picked.map((product) => product.id).filter(Boolean))]
+      searchFetcher.submit(JSON.stringify({ intent: 'search', ids }), {
+        method: 'POST',
+        encType: 'application/json'
+      })
+    } catch (error) {
+      shopify.toast.show(`选择产品失败：${error instanceof Error ? error.message : '未知错误'}`, { isError: true })
     }
-    const { valid, invalid } = parseIds(raw)
-    if (valid.length === 0) {
-      shopify.toast.show('请输入有效的数字产品 ID', { isError: true })
-      return
-    }
-    const ids = valid.map((id) => `gid://shopify/Product/${id}`)
-    searchFetcher.submit(JSON.stringify({ intent: 'search', ids, invalidIds: invalid }), {
-      method: 'POST',
-      encType: 'application/json'
-    })
-  }, [value, searchFetcher, shopify])
+  }, [creating, loading, products, searchFetcher, shopify])
 
   const copySelected = useCallback(() => {
     const selected = products.filter((product) => selectedIds.has(product.id)).map(toVirtualProductInput)
@@ -564,33 +556,22 @@ export default function MachineSubscribeIndex() {
         size="large"
         onHide={() => {
           // 每次关闭都清空上次搜索上下文，避免下次打开时残留选择状态。
-          setValue('')
           setProducts([])
           setSelectedIds(new Set())
         }}
       >
         <s-stack gap="base">
           <s-stack direction="inline" gap="base">
-            <s-text-field
-              ref={(el) => {
-                fieldRef.current = el
-              }}
-              label="产品 ID"
-              placeholder="输入产品数字 ID，用英文逗号分隔，例如：123,456,789"
-              value={value}
-              disabled={creating || undefined}
-              onInput={(e: Event) => setValue((e.target as HTMLInputElement).value)}
-            />
-            <s-button variant="primary" onClick={searchNodes} disabled={loading || creating || undefined}>
-              {loading ? '查询中...' : '搜索'}
+            <s-button
+              variant="primary"
+              icon="product"
+              onClick={pickAndSearchProducts}
+              disabled={loading || creating || undefined}
+              loading={loading || undefined}
+            >
+              {loading ? '查询中...' : '选择产品'}
             </s-button>
           </s-stack>
-
-          {searchData && searchData.invalidIds.length > 0 && (
-            <s-banner tone="warning" heading="已忽略非法 ID">
-              <s-text>以下输入不是有效的数字 ID：{searchData.invalidIds.join('、')}</s-text>
-            </s-banner>
-          )}
 
           {searchData && searchData.notFoundIds.length > 0 && (
             <s-banner tone="warning" heading="部分产品未找到">
@@ -598,19 +579,29 @@ export default function MachineSubscribeIndex() {
             </s-banner>
           )}
 
-          {loading && <s-spinner accessibilityLabel="加载中" />}
+          {products.length === 0 &&
+            (loading ? (
+              <s-section accessibilityLabel="Loading state">
+                <s-grid gap="base" justifyItems="center" paddingBlock="large-400">
+                  <s-grid justifyItems="center" maxInlineSize="450px" gap="base">
+                    <s-stack alignItems="center">
+                      <s-spinner accessibilityLabel="加载中" />
+                    </s-stack>
+                  </s-grid>
+                </s-grid>
+              </s-section>
+            ) : (
+              <EmptyState message="暂无产品，请先选择产品。" />
+            ))}
 
-          {!loading && searchData?.queried && products.length === 0 && (
-            <EmptyState message="未查询到任何产品，请检查输入的产品 ID。" />
-          )}
-
-          {!loading && products.length > 0 && (
+          {products.length > 0 && (
             <s-section accessibilityLabel="查询结果">
               <s-stack gap="small-200">
                 <s-text tone="neutral">已选 {selectedIds.size} 项</s-text>
                 <ProductTable
                   products={products.map(toProductRow)}
                   selectable
+                  loading={loading}
                   linkable={false}
                   selectedIds={selectedIds}
                   onToggle={toggleOne}
