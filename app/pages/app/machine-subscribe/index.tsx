@@ -279,7 +279,7 @@ async function createVirtualProduct(
 }
 
 export const action = async ({ request }: ActionFunctionArgs): Promise<ActionData> => {
-  const { admin } = await authenticate.admin(request)
+  const { admin, session } = await authenticate.admin(request)
 
   let body: ActionRequestBody
   try {
@@ -299,11 +299,14 @@ export const action = async ({ request }: ActionFunctionArgs): Promise<ActionDat
 
   const created: Array<{ id: string; handle: string }> = []
   const errors: string[] = []
+  let suffix = ' Subscription'
+  if (session.shop.includes('waterdropde')) suffix = ' Abonnement'
 
   // 逐项捕获，避免后续 GraphQL/网络异常导致已成功创建的结果无法返回前端
   for (const input of products) {
     try {
-      const result = await createVirtualProduct(admin, input, channelId)
+      const mutationInput = { ...input, title: `${input.title}${suffix}` }
+      const result = await createVirtualProduct(admin, mutationInput, channelId)
       if (result.product) created.push(result.product)
       if (result.errors.length > 0) errors.push(...result.errors.map((msg) => `[${input.handle}] ${msg}`))
     } catch (error) {
@@ -368,9 +371,10 @@ export default function MachineSubscribeIndex() {
 
   const loadVirtualPage = useCallback(
     (after?: string | null) => {
+      // layout 下的 index 路由必须带 ?index，否则 fetcher.load 会打到无 loader 的 layout
       const params = new URLSearchParams({ type: 'virtual' })
       if (after) params.set('after', after)
-      virtualFetcher.load(`${pathname}?${params.toString()}`)
+      virtualFetcher.load(`${pathname}?index&${params.toString()}`)
     },
     [pathname, virtualFetcher]
   )

@@ -144,6 +144,12 @@ export interface VirtualProductCreateInput {
     price: string
     taxable: boolean
     inventoryItem: { requiresShipping: boolean }
+    metafields?: Array<{
+      namespace: string
+      key: string
+      value: string
+      type: string
+    }>
   }>
   files: Array<{ id: string; alt: string }>
   seo: { title: string; description: string }
@@ -197,7 +203,15 @@ export function toVirtualProductInput(product: SearchProduct): VirtualProductCre
       sku: 'WD-VF-SUB',
       price: variant.price,
       taxable: variant.taxable,
-      inventoryItem: { requiresShipping: false }
+      inventoryItem: { requiresShipping: false },
+      metafields: [
+        {
+          namespace: 'custom',
+          key: 'related_filter',
+          value: variant.id,
+          type: 'variant_reference'
+        }
+      ]
     })),
     files: (product.media?.nodes ?? []).map((media) => ({
       id: media.id,
