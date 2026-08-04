@@ -1,0 +1,36 @@
+query CartInput {
+  cart {
+    lines {
+      id
+      quantity
+      cost {
+        subtotalAmount {
+          amount
+        }
+      }
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          id
+          product {
+            id
+            inSelectedCollections: inAnyCollection(ids: [])
+          }
+        }
+      }
+    }
+    buyerIdentity {
+      customer {
+        vipTierName: metafield(namespace: "smile", key: "vip_tier_name") {
+          value
+        }
+      }
+    }
+  }
+  discount {
+    discountClasses
+    metafield(namespace: "$app", key: "function-configuration") {
+      jsonValue
+    }
+  }
+}

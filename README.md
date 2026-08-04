@@ -68,6 +68,10 @@ This template comes pre-configured with examples of:
 
 Please read the [documentation for @shopify/shopify-app-react-router](https://shopify.dev/docs/api/shopify-app-react-router) to see what other API's are available.
 
+## VIP 产品折扣
+
+`extensions/member-discount-function` 根据 Smile VIP 等级生成产品折扣。折扣详情页用于配置等级金额、适用产品和变体。详情见 `docs/会员VIP产品折扣Function说明.md`。
+
 ## Shopify Dev MCP
 
 This template is configured with the Shopify Dev MCP. This instructs [Cursor](https://cursor.com/), [GitHub Copilot](https://github.com/features/copilot) and [Claude Code](https://claude.com/product/claude-code) and [Google Gemini CLI](https://github.com/google-gemini/gemini-cli) to use the Shopify Dev MCP.

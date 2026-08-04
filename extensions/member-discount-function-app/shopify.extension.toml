@@ -1,0 +1,27 @@
+api_version = "2026-07"
+
+[[extensions]]
+name = "t:name"
+handle = "member-discount-function-app"
+type = "function"
+uid = "70774f78-5a0c-a50e-9246-243a8b9fe1874c2cebec"
+description = "t:description"
+
+  [[extensions.targeting]]
+  target = "cart.lines.discounts.generate.run"
+  input_query = "src/cart_lines_discounts_generate_run.graphql"
+  export = "cart-lines-discounts-generate-run"
+
+  [[extensions.targeting]]
+  target = "cart.delivery-options.discounts.generate.run"
+  input_query = "src/cart_delivery_options_discounts_generate_run.graphql"
+  export = "cart-delivery-options-discounts-generate-run"
+
+  [extensions.build]
+  command = ""
+  path = "dist/function.wasm"
+
+# App UI only. Sibling member-discount-function uses ui.handle for Function Settings.
+[extensions.ui.paths]
+create = "/app/member-discount/:functionId/new"
+details = "/app/member-discount/:functionId/:id"

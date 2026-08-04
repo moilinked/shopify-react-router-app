@@ -1,0 +1,16 @@
+{
+  "name": "Member VIP Discount Settings",
+  "description": "Configure product discounts by Smile VIP tier",
+  "title": "VIP tier product discounts",
+  "help": "Match customer metafield smile.vip_tier_name to a tier name below. Only product discounts are applied.",
+  "tierName": "VIP tier name",
+  "tierNamePlaceholder": "e.g. a",
+  "amount": "Fixed amount off",
+  "message": "Discount message",
+  "messagePlaceholder": "e.g. VIP A -¥10",
+  "addTier": "Add tier rule",
+  "removeTier": "Remove",
+  "loading": "Loading…",
+  "error": "Failed to update discount classes. Product discount is required.",
+  "empty": "Add at least one VIP tier rule, then save."
+}

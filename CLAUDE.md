@@ -16,7 +16,7 @@
 
 ## 项目概览
 
-Shopify 内嵌 Admin 应用。**React Router v7(SSR)** + Shopify Polaris Web Components + TypeScript + Tailwind v4 + Zustand + ahooks。包管理 **pnpm**。功能:AI 替代文本、会员活动、竞品监控(展示)、Smile.io 积分。
+Shopify 内嵌 Admin 应用。**React Router v7(SSR)** + Shopify Polaris Web Components + TypeScript + Tailwind v4 + Zustand + ahooks。包管理 **pnpm**。功能:AI 替代文本、会员活动、竞品监控(展示)、Smile.io 积分、会员 VIP 产品折扣 Function（折扣详情配置等级、产品与变体范围）。
 
 ## UI / 组件约定
 
@@ -63,7 +63,7 @@ Shopify 内嵌 Admin 应用。**React Router v7(SSR)** + Shopify Polaris Web Com
 
 改动后同步对应文档:
 
-- `docs/AI替代文本功能技术方案.md`(alt-text)、`docs/会员活动管理系统说明.md`(activities)、`docs/Prisma使用说明.md`、`docs/DEPLOY.md`、`docs/n8n/`。
+- `docs/AI替代文本功能技术方案.md`(alt-text)、`docs/会员活动管理系统说明.md`(activities)、`docs/会员VIP产品折扣Function说明.md`(member VIP discount)、`docs/Prisma使用说明.md`、`docs/DEPLOY.md`、`docs/n8n/`。
 - 竞品监控前端属 `Waterdrop-service` 的 `docs/竞品监控优化方案.md` / `竞品监控优化-变更清单.md` 范畴(标 `[前端]`)。
 - README / ShopifyApp-README 的技术栈、结构、功能章节随之更新。
 

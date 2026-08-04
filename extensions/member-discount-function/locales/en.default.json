@@ -1,0 +1,4 @@
+{
+  "name": "Member VIP Discount",
+  "description": "Product discount based on customer Smile VIP tier (smile.vip_tier_name)"
+}

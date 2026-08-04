@@ -1,0 +1,27 @@
+api_version = "2026-07"
+
+[[extensions]]
+name = "t:name"
+handle = "member-discount-function"
+type = "function"
+uid = "5f08df2e-8457-4ebd-5a12-5c5ae9b1b6cdebdb0b17"
+description = "t:description"
+
+  [[extensions.targeting]]
+  target = "cart.lines.discounts.generate.run"
+  input_query = "src/cart_lines_discounts_generate_run.graphql"
+  export = "cart-lines-discounts-generate-run"
+
+  [[extensions.targeting]]
+  target = "cart.delivery-options.discounts.generate.run"
+  input_query = "src/cart_delivery_options_discounts_generate_run.graphql"
+  export = "cart-delivery-options-discounts-generate-run"
+
+  [extensions.build]
+  command = ""
+  path = "dist/function.wasm"
+
+# 独立 Function：仅走 Admin Function Settings（ui.handle）。
+# React Router 由 sibling 扩展 member-discount-function-app（ui.paths）提供。
+[extensions.ui]
+handle = "member-discount-ui"

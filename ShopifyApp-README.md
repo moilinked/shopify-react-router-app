@@ -239,6 +239,7 @@ Shopify:
 - [Polaris Web Components](https://shopify.dev/docs/api/app-home/polaris-web-components).
 - [App extensions](https://shopify.dev/docs/apps/app-extensions/list)
 - `extensions/thank-you-referral-block`: configurable referral card for `purchase.thank-you.block.render`
+- `extensions/member-discount-function` + `extensions/member-discount-ui`: Smile VIP 等级产品折扣；等级规则、产品和变体范围均在折扣详情页配置（见 `docs/会员VIP产品折扣Function说明.md`）
 - [Shopify Functions](https://shopify.dev/docs/api/functions)
 
 Internationalization:

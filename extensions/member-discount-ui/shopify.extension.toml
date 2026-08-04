@@ -1,0 +1,16 @@
+api_version = "2026-04"
+
+[[extensions]]
+name = "t:name"
+description = "t:description"
+handle = "member-discount-ui"
+uid = "a8c3e91f-2b47-4d6e-9f01-8e5c2a7b4d6e1f2a3b4c"
+type = "ui_extension"
+
+[[extensions.targeting]]
+module = "./src/DiscountFunctionSettings.tsx"
+target = "admin.discount-details.function-settings.render"
+
+[[extensions.metafields]]
+namespace = "$app"
+key = "function-configuration"

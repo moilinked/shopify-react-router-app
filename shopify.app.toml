@@ -39,3 +39,10 @@ redirect_urls = [ "https://example.com/api/auth" ]
 url = "/proxy"
 subpath = "waterdrop"
 prefix = "apps"
+
+# Member VIP Discount Function 配置（Admin UI ↔ Function 共享）
+[discount.metafields.app.function-configuration]
+type = "json"
+name = "Member VIP discount configuration"
+description = "VIP tier → fixed-amount product discount rules for member-discount-function"
+access.admin = "merchant_read_write"
